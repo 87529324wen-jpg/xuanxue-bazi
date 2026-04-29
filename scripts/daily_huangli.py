@@ -321,15 +321,15 @@ def format_almanac_user_style(year=None, month=None, day=None):
     }
     
     # 造句
+    day_label = "今天" if (year is None or (year == datetime.now().year and month == datetime.now().month and day == datetime.now().day)) else "明天"
+    
     parts = []
     if level in ("大吉", "吉"):
-        parts.append(f"明天，日子不错，整体气场{'、'.join(set(auspicious_keywords + [duty_keyword.get(duty, '')]))}。")
+        parts.append(f"{day_label}，日子不错，整体气场{'、'.join(set(auspicious_keywords + [duty_keyword.get(duty, '')]))}。")
     elif level in ("凶", "小凶"):
-        parts.append(f"明天，日子需谨慎，整体气场{duty_keyword.get(duty, '')}{'、' + '、'.join(xiong_sha[:2]) if xiong_sha else ''}。")
+        parts.append(f"{day_label}，日子需谨慎，整体气场{duty_keyword.get(duty, '')}{'、' + '、'.join(xiong_sha[:2]) if xiong_sha else ''}。")
     else:
-        parts.append(f"明天，日子中等，整体气场{duty_keyword.get(duty, '')}。")
-    
-    parts.append("")
+        parts.append(f"{day_label}，日子中等，整体气场{duty_keyword.get(duty, '')}。")
     parts.append(f"宜：{'、'.join(yi)}")
     parts.append("")
     parts.append(f"忌：{'、'.join(ji)}")
