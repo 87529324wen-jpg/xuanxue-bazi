@@ -41,6 +41,7 @@ FORTUNE_JSON = DATA_DIR / "fortune_api_results.json"
 def load_knowledge() -> str:
     """加载skill知识库作为system prompt"""
     files = [
+        "四书精要.md",
         "断命流程指南.md",
         "十神关系速查.md",
         "神煞速查表.md",

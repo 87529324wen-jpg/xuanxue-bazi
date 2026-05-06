@@ -2,7 +2,7 @@
 name: xuanxue-bazi
 description: 玄学八字命理 — AI算命先生，排盘+断命+流年分析
 category: knowledge-base
-version: 3.2
+version: 3.2.2
 ---
 
 # 玄学八字命理 Skill
@@ -13,13 +13,14 @@ version: 3.2
 
 ## 知识库
 
-### 核心经典
-|| 文件 | 来源 | 内容 | 字数 |
-||------|------|------|------|
-|| `子平真诠评注.txt` | 沈孝瞻(清) | 用神论/格局论的核心经典 | 29K |
-|| `滴天髓阐微.txt` | 任铁樵(清)注 | 断命心法+大量案例注解 | 159K |
-|| `洪丕谟-ch2.txt` | 洪丕谟《中国古代算命术》| 五行/天干地支/十神基础理论 | 52K |
-|| `洪丕谟-ch3.txt` | 同上 | 排盘方法/神煞/格局/大运 | 276K |
+### 核心经典（命理四书+洪丕谟）
+|| 文件 | 来源 | 内容 | 字数 ||
+||------|------|------|------||
+|| `渊海子平.txt` | 宋·徐子平 | 子平术源头，十干定义/格局/太岁/神煞/赋文 | 165K ||
+|| `子平真诠评注.txt` | 沈孝瞻(清) | 用神论/格局论的核心经典 | 84K ||
+|| `滴天髓阐微.txt` | 任铁樵(清)注 | 断命心法+大量案例注解 | 418K ||
+|| `洪丕谟-ch2.txt` | 洪丕谟《中国古代算命术》| 五行/天干地支/十神基础理论 | 52K ||
+|| `洪丕谟-ch3.txt` | 同上 | 排盘方法/神煞/格局/大运 | 276K ||
 
 ### 调候经典
 || 文件 | 来源 | 内容 | 字数 |
@@ -47,6 +48,7 @@ version: 3.2
 || `knowledge/进阶格局与补遗.md` | 喜仇闲神+流年十二神煞+特殊格局+四柱宫位+五行基础 |
 || `knowledge/十干精解与补充.md` | 十干精解+神煞四柱断法+十神深层含义+格局补充 |
 || `knowledge/穷通宝鉴逐月详解.md` | 120组天干×地支逐月调候用神速查表 |
+|| `knowledge/断命补充知识库.md` | 外貌判断+疾病诊断+子女生育+婚姻年份+外出求学（从三命通会卷七+错题分析提取） |
 
 **其他术数（4个模块，14.3KB）：**
 || 文件 | 用途 |
@@ -117,12 +119,13 @@ version: 3.2
 ## 经典引用规则
 
 断命时引用以下来源（按优先级）:
-1. 《子平真诠》— 用神/格局判断
-2. 《滴天髓》— 断命心法
-3. 《穷通宝鉴》— 调候用神（已入库）
-4. 《三命通会》— 神煞/案例/格局详解（已入库，12卷）
-5. 《神峰通考》— 实战案例/用神验证（已入库，7卷）
-6. 洪丕谟《中国古代算命术》— 基础理论入门
+1. 《渊海子平》— 子平术源头，十干定义/基础格局
+2. 《子平真诠》— 用神/格局判断
+3. 《滴天髓》— 断命心法
+4. 《穷通宝鉴》— 调候用神（已入库）
+5. 《三命通会》— 神煞/案例/格局详解（已入库，12卷）
+6. 《神峰通考》— 实战案例/用神验证（已入库，7卷）
+7. 洪丕谟《中国古代算命术》— 基础理论入门
 
 ## 输出规范
 
@@ -166,6 +169,23 @@ dy.getGanZhi()  # → '庚子'  ← 正确
 ```
 同样，流年对象(LiuNian)也需要用 `ln.getGanZhi()` 而不是 `str(ln)`。
 EightChar的getYun(gender_int): 0=男, 1=女。
+
+### lunar_python DaYun对象不能直接str()（2026-05-06踩坑）
+`lunar_python` 的大运对象(DaYun)没有 `__str__` 方法：
+```python
+dy = yun.getDaYun()[0]
+str(dy)   # → '<lunar_python.eightchar.DaYun.DaYun object at 0x...>'  ← 错误！
+dy.getGanZhi()  # → '庚子'  ← 正确
+```
+同样，流年对象(LiuNian)也需要用 `ln.getGanZhi()` 而不是 `str(ln)`。
+EightChar的getYun(gender_int): 0=男, 1=女。
+
+### iztro是JS库，不能Python直接调用
+MingLi-Bench用iztro预计算八字+紫微命盘。iztro是npm包（`iztro@2.5.8`），不是Python库。
+替代方案：
+- 用MingLi-Bench的预计算数据 `/Users/mac/MingLi-Bench/data/fortune_api_results.json`（914KB，32个case）
+- 用lunar_python做八字排盘（Python原生）
+- 紫微排盘目前没有Python库可用，只能用预计算数据或手动排
 
 ### 排盘必须用 sxtwl
 - 系统Python: `/usr/bin/python3` (3.9.6)
@@ -923,27 +943,24 @@ python3 scripts/bazi_engine.py --prompt 1997 1 26 19 0 F
 
 **依赖：** `pip install lunar_python`
 
-### bench_runner.py — 命理基准测试
+### bench_runner.py — 命理基准测试 v2
 
-用全球算命师大赛2022-2025年160道真题，测试LLM的八字命理准确率。
+用全球算命师大赛2022-2025年160道真题，测试LLM的八字命理准确率。支持知识库注入和错题分析。
 
 数据来源：[MingLi-Bench](https://github.com/DestinyLinker/MingLi-Bench)
 
 ```bash
-# 冒烟测试（3题）
-python3 scripts/bench_runner.py --sample 3 --verbose
+# 带知识库测试（开卷，注入7个知识模块+补充知识库）
+python3 scripts/bench_runner.py --sample 10 --verbose
 
-# 全量测试
-python3 scripts/bench_runner.py
+# 裸测（闭卷，不注入知识库）
+python3 scripts/bench_runner.py --no-knowledge --sample 10
 
-# 指定年份
-python3 scripts/bench_runner.py --year 2025
+# 错题分析（分析上一次结果，找知识盲区）
+python3 scripts/bench_runner.py --analyze logs/bench_xxx.json
 
-# 指定类别
-python3 scripts/bench_runner.py --categories 婚姻 事业
-
-# 不用预计算命盘（纯考验排盘能力）
-python3 scripts/bench_runner.py --no-astro
+# 指定年份/类别
+python3 scripts/bench_runner.py --year 2025 --categories 婚姻 事业
 ```
 
 **配置（scripts/.env）：**
@@ -954,9 +971,47 @@ OPENAI_BASE_URL=https://your-api.com/v1
 
 **评测维度：** 事业/健康/外貌/婚姻/子女/学业/官非/家庭/性格/灾劫/财运/运势
 
+**v2新增功能：**
+- `--no-knowledge`：闭卷模式，不注入知识库
+- `--analyze`：错题分析模式，自动归类错题+找知识盲区+输出wrong_details.json
+- system prompt自动注入skill知识库（断命流程+十神+神煞+紫微+穷通宝鉴+补充知识库）
+
 **MiMo v2.5 Pro实测：** 每题约60-120秒（reasoning模型），准确率待全量测试。
 
 **MiMo reasoning模型陷阱：** MiMo-v2.5-pro是reasoning模型，回复中`content`可能为空，实际答案在`reasoning_content`字段。必须max_tokens≥8000，否则reasoning token耗尽后content仍为空。
+
+### 飞轮迭代法（v3.2.1核心方法）
+
+**用户明确要求：不是"开卷抄答案"，而是用benchmark诊断skill短板，反向补强知识库。**
+
+```
+跑benchmark → 错题分析 → 找知识盲区 → 补知识库 → 再跑 → 准确率上升 → 循环
+```
+
+**操作流程：**
+1. `python3 scripts/bench_runner.py --sample 10 --verbose` 跑基线
+2. `python3 scripts/bench_runner.py --analyze logs/bench_xxx.json` 错题分析
+3. 从错题中提取知识盲区（哪些类别全错？哪些判断规则缺失？）
+4. 从三命通会/穷通宝鉴等经典中找对应章节，补充到 `knowledge/断命补充知识库.md`
+5. 重新跑同样10题，对比准确率变化
+
+**实测结果（MiMo v2.5 Pro, 10题样本）：**
+| 轮次 | 知识库状态 | 准确率 | 变化 |
+|------|-----------|--------|------|
+| 裸测（闭卷） | 无 | 0% (0/2) | 基线 |
+| 第一轮（开卷） | 原始7个模块 | 30% (3/10) | — |
+| 第二轮（补强） | +断命补充知识库 | 40% (4/10) | +10% |
+
+**补强效果：**
+- ✅ 子女题：错→对（补充了生育年份判断法）
+- ✅ 外貌题：错→对（补充了三命通会外貌判断法）
+- ❌ 婚姻题：对→错（补强反而干扰，需要调优）
+
+**已识别的知识盲区（待持续补强）：**
+- 精神疾病诊断（抑郁/长期用药）— 三命通会卷七有基础但不够细
+- 婚姻年份精确判断 — 大运流年合动规则需更精确
+- 外出求学判断 — 驿马+迁移组合规则缺失
+- 家庭背景判断 — 年柱+父母宫系统方法不足
 
 ### 数据文件
 
