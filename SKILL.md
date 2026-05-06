@@ -157,6 +157,16 @@ DG = dayGZ.tg; DZ = dayGZ.dz
 HG = hourGZ.tg; HZ = hourGZ.dz
 ```
 
+### lunar_python DaYun对象不能直接str()（2026-05-06踩坑）
+`lunar_python` 的大运对象(DaYun)没有 `__str__` 方法：
+```python
+dy = yun.getDaYun()[0]
+str(dy)   # → '<lunar_python.eightchar.DaYun.DaYun object at 0x...>'  ← 错误！
+dy.getGanZhi()  # → '庚子'  ← 正确
+```
+同样，流年对象(LiuNian)也需要用 `ln.getGanZhi()` 而不是 `str(ln)`。
+EightChar的getYun(gender_int): 0=男, 1=女。
+
 ### 排盘必须用 sxtwl
 - 系统Python: `/usr/bin/python3` (3.9.6)
 - 安装: `pip install sxtwl` (系统pip, 不是sandbox)
@@ -945,6 +955,8 @@ OPENAI_BASE_URL=https://your-api.com/v1
 **评测维度：** 事业/健康/外貌/婚姻/子女/学业/官非/家庭/性格/灾劫/财运/运势
 
 **MiMo v2.5 Pro实测：** 每题约60-120秒（reasoning模型），准确率待全量测试。
+
+**MiMo reasoning模型陷阱：** MiMo-v2.5-pro是reasoning模型，回复中`content`可能为空，实际答案在`reasoning_content`字段。必须max_tokens≥8000，否则reasoning token耗尽后content仍为空。
 
 ### 数据文件
 
